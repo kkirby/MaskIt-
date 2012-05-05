@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Page Title</title>
+	<!--[if lte IE 9]>
+		<script type="text/javascript" src="./js/PIE/PIE.js"></script>
+	<![endif]-->
+	<script type="text/javascript" src="./js/jquery.js"></script>
+	<style type="text/css">
+		body {
+			background: #003464;
+			font-family: sans-serif;
+		}
+		
+		#promoSequencer {
+			margin: auto;
+			width: 900px;
+			margin-top: 40px;
+		}
+		
+		#promos {
+			width: 900px;
+			height: 400px;
+			position: relative;
+			color: white;
+		}
+		
+		#promos .promo {
+			position: absolute;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			left: 0;
+		}
+		
+		#tabs_arrow {
+			height: 10px;
+			width: 20px;
+			overflow: hidden;
+			position: relative;
+			background: url('./img/notch.png') no-repeat transparent;
+		}
+		
+		#tabs_container {
+			margin: auto;
+		}
+		
+		#highlight, #no_highlight {
+			position: absolute;
+			top: 0;
+			left: 0;
+		}
+		
+		#tabs {
+			position: relative;
+		}
+		
+		.tab-ul {
+			position: absolute;
+			list-style: none;
+			margin: 0;
+			padding: 0;
+			top: 0;
+			left: 0px;
+			right: 0px;
+			background-color: #133050;
+			-webkit-border-radius: 4px;
+			-moz-border-radius: 4px;
+			border-radius: 4px;
+			box-shadow: 4px 4px 5px black;
+			-moz-box-shadow: 4px 4px 5px black;
+			behavior: url(/js/PIE/PIE.php);
+		}
+		
+		#highlight .tab-ul {
+			background: -webkit-gradient(linear, 0 0, 0 bottom, from(#FEFEFE), to(#b7b7b7));
+			background: -webkit-linear-gradient(#FEFEFE, #b7b7b7);
+			background: -moz-linear-gradient(#FEFEFE, #b7b7b7);
+			background: -ms-linear-gradient(#FEFEFE, #b7b7b7);
+			background: -o-linear-gradient(#FEFEFE, #b7b7b7);
+			background: linear-gradient(#FEFEFE, #b7b7b7);
+			-pie-background: linear-gradient(#FEFEFE, #b7b7b7);
+		}
+		
+		.feature-text {
+			font-size: 12px;
+			font-weight: bold;
+		}
+		
+		#tabs_container li {
+			float: left;
+			/*height: 36px;*/
+			text-align: center;
+			cursor: pointer;
+			color: white;
+		}
+		
+		#tabs_container #highlight li {
+			color: black;
+		}
+		
+		.turtle {
+			background: url('./img/turtle.png');
+			width: 500px;
+			height: 236px;
+			position: absolute;
+			top: 300px;
+			left: 330px;
+			
+		}
+	</style>
+	<script type="text/javascript">
+		// Plugins
+		(function($){
+			$.fn.mouseIsOverAfterTimeout = function(callback,time){
+				if(!time && !callback)return;
+				
+				var instance = function(dom){
+					var _this 			= this;
+					
+					this.event			= null;
+					this.timeoutId		= null;
+				
+					this.dom 			= $(dom);
+					this.ns				= 'mioat';
+					this.mouseEnterNs	= 'mouseenter.' + this.ns;
+					this.mouseLeaveNs	= 'mouseleave.' + this.ns;
+					
+					this.mouseEnter = function(e){
+						_this.event = e;
+						_this.dom.unbind(_this.mouseEnterNs);
+						_this.dom.bind(_this.mouseLeaveNs,_this.mouseLeave);
+						_this.timeoutId = setTimeout(_this.timeoutFunction,time);
+					}
+					
+					this.mouseLeave = function(e){
+						clearTimeout(_this.timeoutId);
+						_this.event = e;
+						_this.dom.unbind(_this.mouseLeaveNs);
+						_this.dom.bind(_this.mouseEnterNs,_this.mouseEnter);
+					}
+					
+					this.timeoutFunction = function(){
+						_this.dom.unbind(_this.mouseEnterNs);
+						_this.dom.unbind(_this.mouseLeaveNs);
+						callback(_this.event,_this.reactivate);
+					}
+					
+					this.reactivate = function(){
+						_this.dom.bind(_this.mouseEnterNs,_this.mouseEnter);
+					}
+					
+					this.dom.bind(this.mouseEnterNs,this.mouseEnter);
+				}
+				
+				this.each(function(){
+					new instance(this);
+				});
+				
+				return this;
+			}
+			$.fn.mask = function(amount,speed,fx){
+				var methods = {
+					createMask: function(){
+						$this = $(this);
+						var container = $('<div/>').html($this.html());
+						$this.html(container);
+						$this.data('mask.container',container);
+						$this.data('mask.applied',true);
+						invokeMethod(this,'applyStyling');
+						if(amount){
+							invokeMethod(this,'moveMask');
+						}
+					},
+					applyStyling: function(){
+						$this = $(this);
+						var container = $this.data('mask.container',container);
+						
+						container
+							.css('display','block')
+							.css('width',$this.parent().width())
+							.css('height',$this.parent().height())
+							.css('position','relative')
+							.addClass('appened-mask');
+						$this
+							.css('position','absolute')
+							.css('overflow','hidden');
+						
+					},
+					moveMask: function(){
+						$this = $(this);
+						if($this.data('mask.applied')){
+							$this.stop();
+							$this.data('mask.container').stop();
+							speed = speed || 0;
+							fx = fx || 'swing';
+							$this.animate(
+								{
+									left: amount + 'px'
+								},
+								{
+									duration: speed,
+									easing: fx,
+									/**
+									 * Instead of running two animations
+									 * we use the step function. This
+									 * will make sure that when
+									 * the mask is updated, so is
+									 * the container. If we used two animations
+									 * then it's possible for them to not  be in
+									 * sync. This will ensure to the highest quality
+									 * that jQuery provides out of the box that the
+									 * mask and the container are in sync with
+									 * each other.
+									 */
+									step: function(position){
+										$this.data('mask.container').css('left',-position);
+									}
+								}
+							);
+						}
+					}
+				};
+				
+				var invokeMethod = function(object,method,args){
+					return methods[method].apply(object,args || []);
+				}
+				
+				this.each(function(){
+					if($(this).data('mask.applied')){
+						invokeMethod(this,'moveMask');
+					}
+					else {
+						invokeMethod(this,'createMask');
+						$(this).data('mask.applied',true);
+					}
+				});
+				
+				return this;
+			};
+			$.fn.iePngFix = function(){
+				if(navigator.appVersion.match('MSIE 6') == null)return;
+				var applyFilterWithSettings = function(settings){
+					this.css(
+						'filter',
+						"progid:DXImageTransform.Microsoft.AlphaImageLoader(src='" + settings.src + "', sizingMethod='" + settings.mode + "')"
+					).css('background','transparent');
+				}
+				
+				this.each(function(){
+					$this = $(this);
+					if($this.css('background-image')){
+						applyFilterWithSettings.apply(
+							$this,
+							[
+								{
+									src: $this.css('background-image').match(/url\(['"]([^']+)['"]\)/)[1],
+									sizingMethod:'scale'
+								}
+							]
+						);
+					}
+					if($this.is('img')){
+						applyFilterWithSettings.apply(
+							$this,
+							[
+								{
+									src: $this.attr('src'),
+									sizingMethod:'scale'
+								}
+							]
+						);
+					}
+				});
+			}
+		})(jQuery);
+		
+		
+		function homepageBanner(config){
+			this.config = config;
+			
+			var determineArrowPos = function(target){
+				return target.position().left + (target.width() / 2) - ($('#tabs_arrow').width() / 2);
+			}
+			
+			var currentFeature = this.config.starting || 0;
+			var rotationCount = 0;
+			
+			var endSequencer = !this.config.rotate;
+			
+			var moveToFeature = function(featureIndex,transition){
+				var feature;
+				if(!(featureIndex instanceof jQuery)){
+					currentFeature = featureIndex;
+					feature = $($('li').get(featureIndex));
+					if(feature){
+						currentFeature = featureIndex;
+					}
+					else {
+						return;
+					}
+				}
+				else {
+					feature = featureIndex;
+					curentFeature = feature.prevAll().length;
+				}
+				if(typeof transition == 'undefined'){
+					transition = this.config.transition;
+				}
+				if(feature){
+					$('#tabs_arrow').stop();
+					$('#promoSequencer #tabs_arrow').animate(
+						{
+							'left': determineArrowPos(feature)
+						},
+						transition
+					);
+					$('#promoSequencer #highlight').mask(
+						feature.position().left,
+						transition
+					);
+					
+					var promoBanner = $('#' + feature.attr('rel'));
+					$('#promoSequencer #promos .promo').not(promoBanner).fadeOut(transition);
+					promoBanner.fadeIn(transition);
+				}
+			}
+			
+			var getNextFeatureNumber = function(){
+				return (currentFeature + 1) % this.config.features.length;
+			}
+			
+			var gotoNextFeature = function(){
+				moveToFeature(getNextFeatureNumber());
+			}
+			
+			var doSequencer = function(){
+				if(endSequencer == false){
+					if(rotationCount != this.config.maxRotations){
+						if(getNextFeatureNumber() == this.config.starting){
+							rotationCount++;
+						}
+						gotoNextFeature();
+						setTimeout(doSequencer,this.config.timeout);
+					}
+				}
+			}
+			
+			
+			var finalize = function(){
+				$('#promos .promo').hide();
+				$('#promoSequencer #highlight').mask();
+				
+				moveToFeature(currentFeature,0);
+				
+				$('#promoSequencer #no_highlight li').mouseIsOverAfterTimeout(
+					function(e,reactivate){
+						endSequencer = true;
+						moveToFeature($(e.currentTarget));
+						setTimeout(reactivate,this.config.transition + 100);
+					}
+					,this.config.hoverTimeout
+				);
+			}
+
+			var determineDimensions = function(){
+				var features = this.config.features;
+				var maxWidth = this.config.maxWidth;
+				var offsetX = this.config.offsetX;
+				var offsetY = this.config.offsetY;
+				
+				var dims = {
+					width: 0,
+					height: 0,
+					globalWidth: 0
+				};
+				var texts = new Array;
+				
+				/**
+				 * For each feature, we want to create a psuedo
+				 * dom element, get the height of it, and check to see
+				 * if it's the biggest height in the stack.
+				 */
+				for(var i = 0; i < features.length; i++){
+					var text = texts[i] = $('<span/>')
+						// We give the span the feature-text class
+						// so it has the same properties as it would
+						// in the sequencer.
+						.addClass('feature-text')
+						// We hide it. We don't do display: none because we still
+						// want it to have a layout.
+						.css('visibility','hidden')
+						// We position it absolute so it doesn't interfere with any
+						// other elements on the page.
+						.css('position','absolute')
+						// We set the contents to the features title
+						.html(features[i].title)
+						// And append it to the body.
+						.appendTo($('body'));
+					// Now we get the width and the height, and making the global
+					// w/h the max one.
+					dims.width = Math.max(text.width() + offsetX * 2,dims.width);
+					dims.height = Math.max(text.height() + offsetY * 2,dims.height);
+				}
+				// We check to make sure that the width we found to be the biggest
+				// isn't bigger than the maxWidth.
+				if(dims.width * features.length > maxWidth){
+					// We make the width be the max width.
+					dims.width = maxWidth / features.length - offsetX * 2;
+					// And we iterate over all the features and find the wrapping
+					// height.
+					for(i = 0; i < features.length; i++){
+						var text = texts[i];
+						text.width(dims.width);
+						dims.height = Math.max(text.height() + offsetY * 2,dims.height);
+					}
+				}
+				// We set an easy global width for the entire promo sequencer tabs.
+				dims.globalWidth = dims.width * features.length;
+				
+				// We remove every element we created from the dom.
+				for(i = 0; i < features.length; i++){
+					texts[i].remove();
+				}
+				
+				// Return the dimensions we found.
+				return dims;
+			}
+			
+			var setupFeatures = function(){
+				var features = this.config.features;
+				var dims = determineDimensions();
+				
+				// Create our list element
+				var list = $('<ul/>')
+					// Give it a width
+					.css('width',dims.globalWidth)
+					// a hight
+					.css('height',dims.height)
+					// make sure nothing overflow is shown, mainly IE.
+					.css('overflow','hidden')
+					// Give it a class, We use a class because PIE (for IE)
+					// can't recoginize new dom elements by their tag names.
+					.addClass('tab-ul');
+				// Create list items for each feature.
+				for(var i = 0; i < features.length; i++){
+					// Make the LI
+					var listItem = $('<li/>')
+						// Give it the feature text class
+						.addClass('feature-text')
+						// Give it a width
+						.css('width',dims.width)
+						// Make it reference to promo_I
+						.attr('rel','promo_' + (i+1))
+						// Add the title to the HTML
+						.html(features[i].title)
+						// Push it into the list we created earlier.
+						.appendTo(list);
+				}
+				// Push the list on to the no_highlight div
+				// clone it, and push the clone into the highlight div.
+				list
+					.appendTo('#promoSequencer  #no_highlight')
+					.clone()
+					.appendTo($('#promoSequencer  #highlight'));
+				
+				// Now that the container elements have a layout (it's part of the dom)
+				// We want to make sure that each feature text is centered vertically.
+				$('#promoSequencer #tabs_container li').each(function(){
+					$this = $(this);
+					$this
+						// Give it a padding top of the total determined height,
+						// minus the elements height, divided by two.
+						// We use padding so that cursor events are triggered
+						.css('padding-top',(dims.height - $this.height())  / 2)
+						// And give it a static height so that a cursor event
+						// is triggered anywhere on the element.
+						.css('height',dims.height);
+				});
+				// Make the tab container have a fixed width and height.
+				$('#promoSequencer  #tabs_container, #promoSequencer  #no_highlight')
+					.css('width',dims.globalWidth)
+					.css('height',dims.height);
+				// Highlight only gets the width of one element's width.
+				// This is becuase it's a mask, and we're masking everything
+				// but the current element.
+				$('#promoSequencer  #highlight')
+					.css('width',dims.width)
+					.css('height',dims.height);
+			}
+			setupFeatures();
+			finalize();
+			setTimeout(doSequencer,this.config.timeout);
+		}
+		
+		var config = {
+			maxWidth: 900,
+			offsetX: 8,
+			offsetY: 10,
+			starting: 0,
+			timeout: 2000,
+			hoverTimeout: 200,
+			transition: 500,
+			maxRotations: 2,
+			rotate: true,
+			features: [
+				{
+					title: "Turtle Time!"
+				},
+				{
+					title: "Placeholder"
+				},
+				{
+					title: "Placeholder"
+				}
+			]
+		}
+		
+		$(function(){
+			new homepageBanner(config);
+			$('.ie-png-fix').iePngFix();
+		});
+	</script>
+</head>
+
+<body>
+	<div id="promoSequencer" class="ie-align-center">
+		<div id="promos">
+			<div id="promo_1" class="promo">
+				<h1>Product One!</h1>
+				<div>
+					<div class="turtle ie-png-fix"></div>
+				</div>
+			</div>
+			<div id="promo_2" class="promo">
+				<h1>Product Two!</h1>
+			</div>
+			<div id="promo_3" class="promo">
+				<h1>Product Three!</h1>
+			</div>
+		</div>
+		<div id="tabs_container" class="ie-align-center">
+			<div id="tabs_arrow" class="ie-png-fix"></div>
+			<div id="tabs">
+				<div id="no_highlight">
+				</div>
+				<div id="highlight">
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
